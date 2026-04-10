@@ -219,39 +219,21 @@
 <body>
   <div class="container">
     <h1>Vad blir det för mat?</h1>
-    <p class="subtitle">Familj på 4 - 2 Vuxna, Barn (12 & 15)</p>
+    <p class="subtitle">Familj på 4 - Johan, Anna, Mileon & Melanie</p>
 
     <div class="input-section">
       <label>Vilken huvudingrediens har du hemma?</label>
       <div class="input-row">
-        <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, biff, pasta, potatis...">
+        <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta, potatis...">
         <button id="generateBtn">Få idéer</button>
-      </div>
-    </div>
-
-    <div class="input-section" style="background:#fef9e7;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#e67e22;font-weight:600;">
-        <span>⚙️</span> GitHub-inställningar (för att spara vinnare)
-      </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <input type="text" id="ghToken" placeholder="GitHub Personal Access Token" style="flex:1;min-width:200px;">
-        <input type="text" id="ghGistId" placeholder="Gist ID (valfritt - skapas automatiskt)" style="flex:1;min-width:200px;">
-        <button id="saveSettingsBtn" style="background:#27ae60;padding:12px 20px;">Spara</button>
-      </div>
-      <div style="font-size:12px;color:#7f8c8d;margin-top:8px;">
-        Token behöver <code>gist</code>-rättigheter. <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank" style="color:#4a90d9;">Skapa token på GitHub</a>
       </div>
     </div>
 
     <div id="dishesContainer" class="dishes hidden"></div>
     <div id="resultsContainer" class="results hidden"></div>
-    <div id="historyContainer" class="results hidden" style="margin-top:30px;"></div>
   </div>
 
   <script>
-    const GITHUB_TOKEN_KEY = 'dinner_app_gh_token';
-    const GIST_ID_KEY = 'dinner_app_gist_id';
-    const GIST_FILENAME = 'dinner_winners.json';
     const ingredientMap = {
       'kyckling': 'chicken',
       'chicken': 'chicken',
@@ -297,38 +279,20 @@
       'cheese': 'cheese',
       'bönor': 'beans',
       'beans': 'beans',
-      'garn': 'prawns',
-      'räka': 'shrimp',
       'kassler': 'ham',
       'skinka': 'ham',
       'ham': 'ham',
-      'ank': 'duck',
       'anka': 'duck',
       'duck': 'duck',
-      'kanin': 'rabbit',
-      'rabbit': 'rabbit',
-      'vilt': 'venison',
-      'ren': 'venison',
-      'crab': 'crab',
-      'krabba': 'crab',
-      'musslor': 'mussels',
-      'mussels': 'mussels',
-      'bläckfisk': 'squid',
-      'squid': 'squid',
-      'kalkonfilé': 'turkey',
     };
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
     let currentDishes = [];
-    let currentIngredient = '';
-    let lastSavedWinner = null;
 
     document.getElementById('generateBtn').addEventListener('click', generateDishes);
     document.getElementById('ingredient').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') generateDishes();
     });
-
-    loadHistory();
 
     async function generateDishes() {
       const input = document.getElementById('ingredient').value.trim().toLowerCase();
@@ -343,9 +307,7 @@
       container.innerHTML = '<div class="loading">Söker recept online...</div>';
       document.getElementById('resultsContainer').classList.add('hidden');
 
-      let englishIngredient = ingredientMap[input] || input;
-      currentIngredient = input;
-      lastSavedWinner = null;
+      const englishIngredient = ingredientMap[input] || input;
 
       try {
         let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
@@ -450,14 +412,7 @@
           <div class="winner">
             ${isTie ? 'Oavgjort!' : `Vinnare: ${currentDishes[winnerIdx].strMeal}`}
           </div>
-          ${!isTie && votes[winnerIdx] > 0 ? `
-            <div style="text-align:center;margin-top:12px;">
-              <button id="saveBtn" style="background:#27ae60;" ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'disabled' : ''}>
-                ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'Sparad!' : 'Spara vinnaren'}
-              </button>
-            </div>
-            ${renderRecipe(winnerIdx)}
-          ` : ''}
+          ${!isTie && votes[winnerIdx] > 0 ? renderRecipe(winnerIdx) : ''}
         ` : ''}
       `;
     }
@@ -491,162 +446,6 @@
         </div>
       `;
     }
-
-    document.addEventListener('click', async (e) => {
-      if (e.target.id === 'saveBtn') {
-        const token = getGhToken();
-        if (!token) {
-          alert('Du behöver ange ditt GitHub Personal Access Token först.');
-          return;
-        }
-
-        const votes = currentDishes.map((_, i) => {
-          const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
-          return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
-        });
-        const winnerIdx = votes.indexOf(Math.max(...votes));
-        const winner = currentDishes[winnerIdx];
-        const voterNames = [];
-        familyMembers.forEach((member, j) => {
-          const sel = document.querySelector(`select[data-voter="${j}"][data-dish="${winnerIdx}"]`);
-          if (sel && sel.value === '1') voterNames.push(member);
-        });
-
-        const btn = e.target;
-        btn.disabled = true;
-        btn.textContent = 'Sparar...';
-
-        try {
-          const winnerEntry = {
-            dish_name: winner.strMeal,
-            dish_id: winner.idMeal,
-            ingredient: currentIngredient,
-            voters: voterNames.join(', '),
-            vote_count: votes[winnerIdx],
-            image_url: winner.strMealThumb,
-            area: winner.strArea,
-            category: winner.strCategory,
-            created_at: new Date().toISOString(),
-          };
-
-          let existingData = [];
-          const gistId = getGistId();
-
-          if (gistId) {
-            const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-              const gist = await res.json();
-              const fileContent = gist.files[GIST_FILENAME];
-              if (fileContent) {
-                try { existingData = JSON.parse(fileContent.content); } catch {}
-              }
-            }
-          }
-
-          existingData.unshift(winnerEntry);
-          existingData = existingData.slice(0, 50);
-
-          const body = {
-            description: 'Dinner app winners - auto saved',
-            public: false,
-            files: {
-              [GIST_FILENAME]: { content: JSON.stringify(existingData, null, 2) }
-            }
-          };
-
-          let saveRes;
-          if (gistId) {
-            saveRes = await fetch(`https://api.github.com/gists/${gistId}`, {
-              method: 'PATCH',
-              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(body)
-            });
-          } else {
-            saveRes = await fetch('https://api.github.com/gists', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(body)
-            });
-          }
-
-          if (!saveRes.ok) throw new Error('GitHub API error');
-
-          const savedGist = await saveRes.json();
-          localStorage.setItem(GIST_ID_KEY, savedGist.id);
-          document.getElementById('ghGistId').value = savedGist.id;
-
-          lastSavedWinner = winner.idMeal;
-          btn.textContent = 'Sparad!';
-          btn.style.background = '#95a5a6';
-          loadHistory();
-        } catch (err) {
-          btn.textContent = 'Fel!';
-          btn.disabled = false;
-          btn.style.background = '#e74c3c';
-          console.error('Save error:', err);
-        }
-      }
-    });
-
-    async function loadHistory() {
-      const container = document.getElementById('historyContainer');
-      const token = getGhToken();
-      const gistId = getGistId();
-
-      if (!token || !gistId) {
-        container.classList.add('hidden');
-        return;
-      }
-
-      try {
-        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) {
-          container.classList.add('hidden');
-          return;
-        }
-
-        const gist = await res.json();
-        const fileContent = gist.files[GIST_FILENAME];
-        if (!fileContent) {
-          container.classList.add('hidden');
-          return;
-        }
-
-        const data = JSON.parse(fileContent.content);
-        if (!data || data.length === 0) {
-          container.classList.add('hidden');
-          return;
-        }
-
-        container.classList.remove('hidden');
-        container.innerHTML = `
-          <h2>Tidigare vinnare</h2>
-          ${data.map(w => `
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;">
-              <img src="${w.image_url}" alt="${w.dish_name}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" loading="lazy">
-              <div style="flex:1;">
-                <div style="font-weight:600;">${w.dish_name}</div>
-                <div style="font-size:13px;color:#7f8c8d;">
-                  ${w.ingredient ? 'Ingrediens: ' + w.ingredient : ''}
-                  ${w.voters ? ' • Röster: ' + w.voters : ''}
-                  ${w.vote_count ? ' (' + w.vote_count + '/4)' : ''}
-                </div>
-                <div style="font-size:12px;color:#bdc3c7;">${new Date(w.created_at).toLocaleDateString('sv-SE')}</div>
-              </div>
-            </div>
-          `).join('')}
-        `;
-      } catch (err) {
-        container.classList.add('hidden');
-      }
-    }
-
-    loadHistory();
   </script>
 </body>
 </html>
