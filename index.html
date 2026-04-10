@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vad blir det för mat?</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f0eb;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    .input-section {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #34495e;
+    }
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+    input {
+      flex: 1;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #4a90d9; }
+    button {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: #e67e22;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #d35400; }
+    button:disabled { background: #bdc3c7; cursor: not-allowed; }
+    .dishes {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .dish-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border-left: 6px solid #4a90d9;
+    }
+    .dish-card:nth-child(2) { border-left-color: #e67e22; }
+    .dish-card:nth-child(3) { border-left-color: #27ae60; }
+    .dish-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .dish-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 6px;
+    }
+    .dish-area {
+      font-size: 13px;
+      color: #95a5a6;
+      margin-bottom: 12px;
+    }
+    .vote-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .vote-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #34495e;
+      margin-bottom: 12px;
+    }
+    .voters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .voter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .voter select {
+      padding: 6px 10px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .results {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .results h2 {
+      font-size: 20px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+    .result-bar-container {
+      margin-bottom: 14px;
+    }
+    .result-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .result-bar {
+      height: 12px;
+      background: #ecf0f1;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .result-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.4s ease;
+    }
+    .winner {
+      margin-top: 16px;
+      padding: 16px;
+      background: #d5f5e3;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 700;
+      color: #27ae60;
+      font-size: 18px;
+    }
+    .recipe-card {
+      margin-top: 20px;
+      padding: 24px;
+      background: #fef9e7;
+      border-radius: 12px;
+      border: 2px solid #f9e79f;
+    }
+    .recipe-card h3 {
+      font-size: 20px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+    .recipe-card h4 {
+      font-size: 16px;
+      color: #e67e22;
+      margin: 16px 0 8px;
+    }
+    .recipe-card ul, .recipe-card ol {
+      padding-left: 20px;
+    }
+    .recipe-card li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+      color: #34495e;
+      font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-size: 18px;
+    }
+    .error {
+      text-align: center;
+      padding: 20px;
+      background: #fadbd8;
+      border-radius: 10px;
+      color: #c0392b;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Vad blir det för mat?</h1>
+    <p class="subtitle">Familj på 4 - 2 Vuxna, Barn (12 & 15)</p>
+
+    <div class="input-section">
+      <label>Vilken huvudingrediens har du hemma?</label>
+      <div class="input-row">
+        <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, biff, pasta, potatis...">
+        <button id="generateBtn">Få idéer</button>
+      </div>
+    </div>
+
+    <div id="dishesContainer" class="dishes hidden"></div>
+    <div id="resultsContainer" class="results hidden"></div>
+    <div id="historyContainer" class="results hidden" style="margin-top:30px;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const ingredientMap = {
+      'kyckling': 'chicken',
+      'chicken': 'chicken',
+      'lax': 'salmon',
+      'salmon': 'salmon',
+      'kött': 'beef',
+      'biff': 'beef',
+      'nötkött': 'beef',
+      'beef': 'beef',
+      'fläsk': 'pork',
+      'fläskkött': 'pork',
+      'pork': 'pork',
+      'korv': 'sausage',
+      'sausage': 'sausage',
+      'färs': 'minced_beef',
+      'nötfärs': 'minced_beef',
+      'minced': 'minced_beef',
+      'pasta': 'pasta',
+      'spaghetti': 'spaghetti',
+      'potatis': 'potatoes',
+      'potatoes': 'potatoes',
+      'ris': 'rice',
+      'rice': 'rice',
+      'räkor': 'shrimp',
+      'shrimp': 'shrimp',
+      'torsk': 'cod',
+      'cod': 'cod',
+      'fisk': 'white_fish',
+      'fish': 'white_fish',
+      'ägg': 'eggs',
+      'egg': 'eggs',
+      'eggs': 'eggs',
+      'tofu': 'tofu',
+      'lamm': 'lamb',
+      'lamb': 'lamb',
+      'kalkon': 'turkey',
+      'turkey': 'turkey',
+      'grönsaker': 'vegetables',
+      'vegetables': 'vegetables',
+      'svamp': 'mushrooms',
+      'mushrooms': 'mushrooms',
+      'ost': 'cheese',
+      'cheese': 'cheese',
+      'bönor': 'beans',
+      'beans': 'beans',
+      'garn': 'prawns',
+      'räka': 'shrimp',
+      'kassler': 'ham',
+      'skinka': 'ham',
+      'ham': 'ham',
+      'ank': 'duck',
+      'anka': 'duck',
+      'duck': 'duck',
+      'kanin': 'rabbit',
+      'rabbit': 'rabbit',
+      'vilt': 'venison',
+      'ren': 'venison',
+      'crab': 'crab',
+      'krabba': 'crab',
+      'musslor': 'mussels',
+      'mussels': 'mussels',
+      'bläckfisk': 'squid',
+      'squid': 'squid',
+      'kalkonfilé': 'turkey',
+    };
+
+    const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
+    let currentDishes = [];
+    let currentIngredient = '';
+    let lastSavedWinner = null;
+
+    document.getElementById('generateBtn').addEventListener('click', generateDishes);
+    document.getElementById('ingredient').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') generateDishes();
+    });
+
+    loadHistory();
+
+    async function generateDishes() {
+      const input = document.getElementById('ingredient').value.trim().toLowerCase();
+      if (!input) return;
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Söker...';
+
+      const container = document.getElementById('dishesContainer');
+      container.classList.remove('hidden');
+      container.innerHTML = '<div class="loading">Söker recept online...</div>';
+      document.getElementById('resultsContainer').classList.add('hidden');
+
+      let englishIngredient = ingredientMap[input] || input;
+      currentIngredient = input;
+      lastSavedWinner = null;
+
+      try {
+        let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
+
+        if (!data.meals || data.meals.length === 0) {
+          const searchData = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
+          if (searchData.meals && searchData.meals.length > 0) {
+            data.meals = searchData.meals;
+          }
+        }
+
+        if (!data.meals || data.meals.length === 0) {
+          container.innerHTML = `<div class="error">Hittade inga recept för "${input}". Försök med en annan ingrediens!</div>`;
+          btn.disabled = false;
+          btn.textContent = 'Få idéer';
+          return;
+        }
+
+        const shuffled = data.meals.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 3);
+
+        const details = await Promise.all(
+          selected.map(meal =>
+            fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`)
+              .then(r => r.json())
+              .then(d => d.meals[0])
+          )
+        );
+
+        currentDishes = details;
+        renderDishes();
+        renderResults();
+      } catch (err) {
+        container.innerHTML = `<div class="error">Något gick fel. Kontrollera din internetanslutning och försök igen.</div>`;
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Få idéer';
+    }
+
+    function renderDishes() {
+      const container = document.getElementById('dishesContainer');
+      container.innerHTML = currentDishes.map((dish, i) => `
+        <div class="dish-card">
+          <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" loading="lazy">
+          <div class="dish-name">Alternativ ${i + 1}: ${dish.strMeal}</div>
+          <div class="dish-area">${dish.strArea ? dish.strArea + 'iskt' : ''} ${dish.strCategory ? '• ' + dish.strCategory : ''}</div>
+          <div class="vote-section">
+            <div class="vote-title">Rösta på denna rätt:</div>
+            <div class="voters">
+              ${familyMembers.map((member, j) => `
+                <div class="voter">
+                  <span>${member}</span>
+                  <select data-voter="${j}" data-dish="${i}">
+                    <option value="0">Nej</option>
+                    <option value="1">Ja!</option>
+                  </select>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', renderResults);
+      });
+
+      renderResults();
+    }
+
+    function renderResults() {
+      const container = document.getElementById('resultsContainer');
+      container.classList.remove('hidden');
+
+      const votes = currentDishes.map((_, i) => {
+        const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
+        return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
+      });
+
+      const maxVotes = Math.max(...votes, 1);
+      const totalVotes = votes.reduce((a, b) => a + b, 0);
+
+      const colors = ['#4a90d9', '#e67e22', '#27ae60'];
+      const winnerIdx = votes.indexOf(Math.max(...votes));
+      const isTie = votes.filter(v => v === votes[winnerIdx]).length > 1 && votes[winnerIdx] > 0;
+
+      container.innerHTML = `
+        <h2>Rösträkning</h2>
+        ${currentDishes.map((dish, i) => `
+          <div class="result-bar-container">
+            <div class="result-label">
+              <span>${dish.strMeal}</span>
+              <span>${votes[i]} röst${votes[i] !== 1 ? 'er' : ''}</span>
+            </div>
+            <div class="result-bar">
+              <div class="result-fill" style="width: ${(votes[i] / maxVotes) * 100}%; background: ${colors[i]};"></div>
+            </div>
+          </div>
+        `).join('')}
+        ${totalVotes > 0 ? `
+          <div class="winner">
+            ${isTie ? 'Oavgjort!' : `Vinnare: ${currentDishes[winnerIdx].strMeal}`}
+          </div>
+          ${!isTie && votes[winnerIdx] > 0 ? `
+            <div style="text-align:center;margin-top:12px;">
+              <button id="saveBtn" style="background:#27ae60;" ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'disabled' : ''}>
+                ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'Sparad!' : 'Spara vinnaren'}
+              </button>
+            </div>
+            ${renderRecipe(winnerIdx)}
+          ` : ''}
+        ` : ''}
+      `;
+    }
+
+    function renderRecipe(idx) {
+      const dish = currentDishes[idx];
+      const ingredients = [];
+      for (let i = 1; i <= 20; i++) {
+        const ingredient = dish[`strIngredient${i}`];
+        const measure = dish[`strMeasure${i}`];
+        if (ingredient && ingredient.trim()) {
+          ingredients.push(`${measure ? measure.trim() : ''} ${ingredient.trim()}`);
+        }
+      }
+      const instructions = dish.strInstructions
+        ? dish.strInstructions
+            .split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(s => s.length > 5)
+        : [];
+
+      return `
+        <div class="recipe-card">
+          <h3>Recept: ${dish.strMeal}</h3>
+          <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" style="margin-bottom:16px;">
+          <h4>Ingredienser</h4>
+          <ul>${ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+          <h4>Instruktioner</h4>
+          <ol>${instructions.map(s => `<li>${s}</li>`).join('')}</ol>
+          ${dish.strYoutube ? `<h4>Video</h4><p><a href="${dish.strYoutube}" target="_blank" style="color:#4a90d9;">Titta på YouTube</a></p>` : ''}
+        </div>
+      `;
+    }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id === 'saveBtn') {
+        const votes = currentDishes.map((_, i) => {
+          const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
+          return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
+        });
+        const winnerIdx = votes.indexOf(Math.max(...votes));
+        const winner = currentDishes[winnerIdx];
+        const voterNames = [];
+        familyMembers.forEach((member, j) => {
+          const sel = document.querySelector(`select[data-voter="${j}"][data-dish="${winnerIdx}"]`);
+          if (sel && sel.value === '1') voterNames.push(member);
+        });
+
+        const btn = e.target;
+        btn.disabled = true;
+        btn.textContent = 'Sparar...';
+
+        try {
+          const { error } = await supabase.from('winners').insert({
+            dish_name: winner.strMeal,
+            dish_id: winner.idMeal,
+            ingredient: currentIngredient,
+            voters: voterNames.join(', '),
+            vote_count: votes[winnerIdx],
+            image_url: winner.strMealThumb,
+            area: winner.strArea,
+            category: winner.strCategory,
+          });
+
+          if (error) throw error;
+          lastSavedWinner = winner.idMeal;
+          btn.textContent = 'Sparad!';
+          btn.style.background = '#95a5a6';
+          loadHistory();
+        } catch (err) {
+          btn.textContent = 'Fel! Försök igen';
+          btn.disabled = false;
+          btn.style.background = '#e74c3c';
+          console.error('Save error:', err);
+        }
+      }
+    });
+
+    async function loadHistory() {
+      const container = document.getElementById('historyContainer');
+      try {
+        const { data, error } = await supabase
+          .from('winners')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          container.classList.add('hidden');
+          return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = `
+          <h2>Tidigare vinnare</h2>
+          ${data.map(w => `
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;">
+              <img src="${w.image_url}" alt="${w.dish_name}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;">
+              <div style="flex:1;">
+                <div style="font-weight:600;">${w.dish_name}</div>
+                <div style="font-size:13px;color:#7f8c8d;">
+                  ${w.ingredient ? 'Ingrediens: ' + w.ingredient : ''}
+                  ${w.voters ? ' • Röster: ' + w.voters : ''}
+                  ${w.vote_count ? ' (' + w.vote_count + '/4)' : ''}
+                </div>
+                <div style="font-size:12px;color:#bdc3c7;">${new Date(w.created_at).toLocaleDateString('sv-SE')}</div>
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } catch (err) {
+        console.error('History error:', err);
+      }
+    }
+  </script>
+</body>
+</html>
