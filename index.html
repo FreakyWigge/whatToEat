@@ -227,8 +227,8 @@
               ${familyMembers.map((member, j) => `
                 <div class="voter">
                   <span>${member}</span>
-                  <select data-voter="${j}" data-dish="${i}" onchange="handleVote(${j}, ${i}, this.value)">
-                    <option value="0" ${individualVotes[j][i] === 0 ? 'selected' : ''}>Nej</option>
+                  <select data-voter="${j}" data-dish="${i}">
+                    <option value="0" ${individualVotes[j][i] === 0 || !individualVotes[j][i] ? 'selected' : ''}>Nej</option>
                     <option value="1" ${individualVotes[j][i] === 1 ? 'selected' : ''}>Ja!</option>
                   </select>
                 </div>
@@ -237,6 +237,15 @@
           </div>
         </div>
       `).join('');
+
+      container.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', function() {
+          const voterIdx = parseInt(this.dataset.voter);
+          const dishIdx = parseInt(this.dataset.dish);
+          const value = parseInt(this.value);
+          handleVote(voterIdx, dishIdx, value);
+        });
+      });
     }
 
     async function handleVote(voterIdx, dishIdx, value) {
