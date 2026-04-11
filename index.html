@@ -6,7 +6,7 @@
   <title>Vad blir det för mat?</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { padding: 16px 8px; }
+    body { padding: 16px 8px; font-family: 'Segoe UI', sans-serif; background: #f5f0eb; }
     .container { max-width: 100%; margin: 0 auto; padding: 0 4px; }
     @media (min-width: 500px) { 
       .container { max-width: 480px; padding: 0 20px; }
@@ -194,7 +194,7 @@
             ${dish.strCategory ? ' • ' + (categoryTranslations[dish.strCategory] || dish.strCategory) : ''}
           </div>
           <div class="vote-section">
-            <div class="vote-title">Rösta på denna rätt:</div>
+            <div class="vote-title">Rösta:</div>
             <div class="voters">
               ${familyMembers.map((member, j) => `
                 <div class="voter">
@@ -233,7 +233,7 @@
       const isTie = votes.filter(v => v === votes[winnerIdx]).length > 1 && votes[winnerIdx] > 0;
 
       container.innerHTML = `
-        <h2>Rösträkning</h2>
+        <h2>Resultat</h2>
         ${currentDishes.map((dish, i) => `
           <div class="result-bar-container">
             <div class="result-label">
@@ -247,7 +247,7 @@
         `).join('')}
         ${totalVotes > 0 ? `
           <div class="winner">
-            ${isTie ? 'Oavgjort!' : `Vinnare: ${currentDishes[winnerIdx].strMeal}`}
+            ${isTie ? 'Oavgjort!' : `Idag blir det: ${currentDishes[winnerIdx].strMeal}`}
           </div>
           ${!isTie && votes[winnerIdx] > 0 ? renderRecipe(winnerIdx) : ''}
         ` : ''}
@@ -271,7 +271,7 @@
       return `
         <div class="recipe-card">
           <h3>Recept: ${dish.strMeal}</h3>
-          <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" style="margin-bottom:16px;">
+          <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" style="height:250px;margin-bottom:16px;">
           <h4>Ingredienser</h4>
           <ul>${ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
           <h4>Instruktioner</h4>
