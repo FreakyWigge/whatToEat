@@ -57,18 +57,22 @@
     .loading { text-align: center; padding: 40px; color: #7f8c8d; font-size: 18px; }
     .error { text-align: center; padding: 20px; background: #fadbd8; border-radius: 10px; color: #c0392b; }
     .hidden { display: none; }
+    .sync-info { text-align: center; font-size: 11px; color: #95a5a6; margin-bottom: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Vad blir det för mat?</h1>
     <p class="subtitle">Familj på 4 - Johan, Anna, Mileon & Melanie</p>
+    <div class="sync-info" id="syncInfo">⬆️ Laddar...</div>
 
-    <div class="input-section">
-      <label>Vilken ingrediens har du hemma?</label>
-      <div class="input-row">
-        <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta, potatis...">
-        <button id="generateBtn">Hitta recept</button>
+    <div id="startSection">
+      <div class="input-section">
+        <label>Ny omgång - vilken ingrediens?</label>
+        <div class="input-row">
+          <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta...">
+          <button id="generateBtn">Starta omröstning</button>
+        </div>
       </div>
     </div>
 
@@ -81,8 +85,7 @@
     const SUPABASE_URL = 'https://qnqfqccfkxdfkabuxnas.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFubmZxY2Nma3hkZmthYnV4bmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MTY1MTYsImV4cCI6MjA2NTA5MjUxNn0.sb_publishable_u4TDO0cgUSubJpGOqeXDJg_Zk1mkjpC';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
-  <script>
+
     const ingredientMap = {
       'kyckling': 'chicken',
       'lax': 'salmon',
@@ -132,29 +135,64 @@
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
     let currentDishes = [];
-    let currentIngredient = '';
-    let lastSavedWinner = null;
+    let votes = [0, 0, 0, 0];
+    let currentSession = null;
 
-    document.getElementById('generateBtn').addEventListener('click', searchRecipes);
+    const syncInfo = document.getElementById('syncInfo');
+    const startSection = document.getElementById('startSection');
+
+    function updateSyncInfo(text) {
+      syncInfo.textContent = text;
+    }
+
+    async function loadCurrentSession() {
+      updateSyncInfo('⬆️ Laddar från databasen...');
+      
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading session:', error);
+        updateSyncInfo('❌ Kunde inte ladda');
+        return;
+      }
+
+      if (data) {
+        currentSession = data;
+        const recipes = JSON.parse(data.recipes);
+        const savedVotes = JSON.parse(data.votes);
+        
+        currentDishes = recipes;
+        votes = savedVotes;
+        
+        startSection.classList.add('hidden');
+        renderDishes();
+        renderResults();
+        updateSyncInfo('✅ Synkat med alla enheter');
+      } else {
+        updateSyncInfo('🟡 Ingen aktiv omröstning');
+        startSection.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', startNewVoting);
     document.getElementById('ingredient').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') searchRecipes();
+      if (e.key === 'Enter') startNewVoting();
     });
 
-    async function searchRecipes() {
+    async function startNewVoting() {
       const input = document.getElementById('ingredient').value.trim().toLowerCase();
       if (!input) return;
-
-      currentIngredient = input;
-      lastSavedWinner = null;
 
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.textContent = 'Söker...';
-
-      const container = document.getElementById('dishesContainer');
-      container.classList.remove('hidden');
-      container.innerHTML = '<div class="loading">Söker recept...</div>';
-      document.getElementById('resultsContainer').classList.add('hidden');
+      updateSyncInfo('⬆️ Skapar ny omröstning...');
 
       const englishIngredient = ingredientMap[input] || input;
 
@@ -166,9 +204,9 @@
         }
 
         if (!data.meals || data.meals.length === 0) {
-          container.innerHTML = `<div class="error">Hittade inga recept för "${input}". Försök med en annan ingrediens!</div>`;
+          updateSyncInfo('❌ Inga recept hittades');
           btn.disabled = false;
-          btn.textContent = 'Hitta recept';
+          btn.textContent = 'Starta omröstning';
           return;
         }
 
@@ -184,18 +222,40 @@
         );
 
         currentDishes = details;
+        votes = [0, 0, 0, 0];
+
+        const { error } = await supabase
+          .from('sessions')
+          .update({ active: false })
+          .eq('active', true);
+
+        const { error: insertError } = await supabase
+          .from('sessions')
+          .insert({
+            ingredient: input,
+            recipes: JSON.stringify(currentDishes),
+            votes: JSON.stringify(votes),
+            active: true,
+          });
+
+        if (insertError) throw insertError;
+
+        startSection.classList.add('hidden');
         renderDishes();
         renderResults();
+        updateSyncInfo('✅ Synkat med alla enheter');
       } catch (err) {
-        container.innerHTML = `<div class="error">Något gick fel. Kontrollera din internetanslutning.</div>`;
+        console.error('Error:', err);
+        updateSyncInfo('❌ Något gick fel');
       }
 
       btn.disabled = false;
-      btn.textContent = 'Hitta recept';
+      btn.textContent = 'Starta omröstning';
     }
 
     function renderDishes() {
       const container = document.getElementById('dishesContainer');
+      container.classList.remove('hidden');
       container.innerHTML = currentDishes.map((dish, i) => `
         <div class="dish-card">
           <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" loading="lazy">
@@ -210,9 +270,9 @@
               ${familyMembers.map((member, j) => `
                 <div class="voter">
                   <span>${member}</span>
-                  <select data-voter="${j}" data-dish="${i}">
-                    <option value="0">Nej</option>
-                    <option value="1">Ja!</option>
+                  <select data-voter="${j}" data-dish="${i}" ${votes[i] > 0 ? 'disabled' : ''}>
+                    <option value="0" ${votes[i] === 0 ? 'selected' : ''}>Nej</option>
+                    <option value="1" ${votes[i] > 0 ? 'selected' : ''}>Ja!</option>
                   </select>
                 </div>
               `).join('')}
@@ -222,20 +282,37 @@
       `).join('');
 
       container.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', renderResults);
+        sel.addEventListener('change', handleVote);
       });
+    }
 
+    async function handleVote(e) {
+      const dishIdx = parseInt(e.target.dataset.dish);
+      const voterIdx = parseInt(e.target.dataset.voter);
+      const value = parseInt(e.target.value);
+
+      updateSyncInfo('⬆️ Sparar röst...');
+
+      votes[dishIdx] = value;
       renderResults();
+      renderDishes();
+
+      const { error } = await supabase
+        .from('sessions')
+        .update({ votes: JSON.stringify(votes) })
+        .eq('id', currentSession.id);
+
+      if (error) {
+        console.error('Error saving vote:', error);
+        updateSyncInfo('❌ Kunde inte spara röst');
+      } else {
+        updateSyncInfo('✅ Synkat med alla enheter');
+      }
     }
 
     function renderResults() {
       const container = document.getElementById('resultsContainer');
       container.classList.remove('hidden');
-
-      const votes = currentDishes.map((_, i) => {
-        const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
-        return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
-      });
 
       const maxVotes = Math.max(...votes, 1);
       const totalVotes = votes.reduce((a, b) => a + b, 0);
@@ -260,14 +337,7 @@
           <div class="winner">
             ${isTie ? 'Oavgjort!' : `Idag blir det: ${currentDishes[winnerIdx].strMeal}`}
           </div>
-          ${!isTie && votes[winnerIdx] > 0 ? `
-            <div style="text-align:center;margin-top:12px;">
-              <button id="saveBtn" style="background:#27ae60;${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'background:#95a5a6;' : ''}" ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'disabled' : ''}>
-                ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'Sparad!' : 'Spara till historiken'}
-              </button>
-            </div>
-            ${renderRecipe(winnerIdx)}
-          ` : ''}
+          ${!isTie && votes[winnerIdx] > 0 ? renderRecipe(winnerIdx) : ''}
         ` : ''}
       `;
     }
@@ -299,46 +369,25 @@
       `;
     }
 
-    document.addEventListener('click', async (e) => {
-      if (e.target.id === 'saveBtn') {
-        const votes = currentDishes.map((_, i) => {
-          const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
-          return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
-        });
-        const winnerIdx = votes.indexOf(Math.max(...votes));
-        const winner = currentDishes[winnerIdx];
-        const voterNames = [];
-        familyMembers.forEach((member, j) => {
-          const sel = document.querySelector(`select[data-voter="${j}"][data-dish="${winnerIdx}"]`);
-          if (sel && sel.value === '1') voterNames.push(member);
-        });
+    async function setupRealtime() {
+      supabase
+        .channel('sessions')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, (payload) => {
+          if (payload.new && payload.new.active) {
+            currentSession = payload.new;
+            currentDishes = JSON.parse(payload.new.recipes);
+            votes = JSON.parse(payload.new.votes);
+            startSection.classList.add('hidden');
+            renderDishes();
+            renderResults();
+            updateSyncInfo('🔄 Uppdaterat från en annan enhet');
+          }
+        })
+        .subscribe();
+    }
 
-        const btn = e.target;
-        btn.disabled = true;
-        btn.textContent = 'Sparar...';
-
-        try {
-          const { error } = await supabase.from('winners').insert({
-            dish_name: winner.strMeal,
-            dish_id: winner.idMeal,
-            ingredient: currentIngredient,
-            voters: voterNames.join(', '),
-            vote_count: votes[winnerIdx],
-            image_url: winner.strMealThumb,
-            area: winner.strArea,
-            category: winner.strCategory,
-          });
-
-          if (error) throw error;
-          lastSavedWinner = winner.idMeal;
-          btn.textContent = 'Sparad!';
-        } catch (err) {
-          btn.textContent = 'Fel!';
-          btn.disabled = false;
-          console.error('Save error:', err);
-        }
-      }
-    });
+    loadCurrentSession();
+    setupRealtime();
   </script>
 </body>
 </html>
