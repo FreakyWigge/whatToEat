@@ -6,213 +6,56 @@
   <title>Vad blir det för mat?</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f0eb;
-      min-height: 100vh;
-      padding: 40px 20px;
+    body { padding: 16px 8px; }
+    .container { max-width: 100%; margin: 0 auto; padding: 0 4px; }
+    @media (min-width: 500px) { 
+      .container { max-width: 480px; padding: 0 20px; }
+      h1 { font-size: 32px; }
+      .subtitle { font-size: 15px; margin-bottom: 24px; }
+      .input-section { border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+      label { margin-bottom: 10px; font-size: 15px; }
+      .input-row { flex-direction: row; }
+      input { flex: 1; border: 2px solid #ddd; border-radius: 10px; outline: none; }
+      input:focus { border-color: #4a90d9; }
+      button { padding: 14px 24px; font-size: 15px; font-weight: 600; border: none; border-radius: 10px; background: #e67e22; color: white; cursor: pointer; }
     }
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    h1 {
-      text-align: center;
-      font-size: 36px;
-      color: #2c3e50;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      text-align: center;
-      color: #7f8c8d;
-      margin-bottom: 30px;
-      font-size: 16px;
-    }
-    .input-section {
-      background: white;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      margin-bottom: 30px;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: #34495e;
-    }
-    .input-row {
-      display: flex;
-      gap: 12px;
-    }
-    input {
-      flex: 1;
-      padding: 14px 16px;
-      font-size: 16px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input:focus { border-color: #4a90d9; }
-    button {
-      padding: 14px 28px;
-      font-size: 16px;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      background: #e67e22;
-      color: white;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+    h1 { text-align: center; font-size: 28px; color: #2c3e50; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 20px; font-size: 14px; }
+    .input-section { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #34495e; font-size: 14px; }
+    .input-row { display: flex; flex-direction: column; gap: 8px; }
+    input { padding: 12px 14px; font-size: 16px; }
+    button { padding: 12px 20px; font-size: 14px; }
     button:hover { background: #d35400; }
     button:disabled { background: #bdc3c7; cursor: not-allowed; }
-    .dishes {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-    .dish-card {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      border-left: 6px solid #4a90d9;
-    }
-    .dish-card:nth-child(2) { border-left-color: #e67e22; }
-    .dish-card:nth-child(3) { border-left-color: #27ae60; }
-    .dish-img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 12px;
-    }
-    .dish-name {
-      font-size: 22px;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 6px;
-    }
-    .dish-area {
-      font-size: 13px;
-      color: #95a5a6;
-      margin-bottom: 12px;
-    }
-    .vote-section {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 16px;
-    }
-    .vote-title {
-      font-weight: 600;
-      font-size: 14px;
-      color: #34495e;
-      margin-bottom: 12px;
-    }
-    .voters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .voter {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: white;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .voter select {
-      padding: 6px 10px;
-      border: 2px solid #ddd;
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
-    }
-    .results {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
-    .results h2 {
-      font-size: 20px;
-      color: #2c3e50;
-      margin-bottom: 16px;
-    }
-    .result-bar-container {
-      margin-bottom: 14px;
-    }
-    .result-label {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-    .result-bar {
-      height: 12px;
-      background: #ecf0f1;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .result-fill {
-      height: 100%;
-      border-radius: 6px;
-      transition: width 0.4s ease;
-    }
-    .winner {
-      margin-top: 16px;
-      padding: 16px;
-      background: #d5f5e3;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 700;
-      color: #27ae60;
-      font-size: 18px;
-    }
-    .recipe-card {
-      margin-top: 20px;
-      padding: 24px;
-      background: #fef9e7;
-      border-radius: 12px;
-      border: 2px solid #f9e79f;
-    }
-    .recipe-card h3 {
-      font-size: 20px;
-      color: #2c3e50;
-      margin-bottom: 16px;
-    }
-    .recipe-card h4 {
-      font-size: 16px;
-      color: #e67e22;
-      margin: 16px 0 8px;
-    }
-    .recipe-card ul, .recipe-card ol {
-      padding-left: 20px;
-    }
-    .recipe-card li {
-      margin-bottom: 6px;
-      line-height: 1.5;
-      color: #34495e;
-      font-size: 14px;
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #7f8c8d;
-      font-size: 18px;
-    }
-    .error {
-      text-align: center;
-      padding: 20px;
-      background: #fadbd8;
-      border-radius: 10px;
-      color: #c0392b;
-    }
+    .dishes { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; }
+    .dish-card { background: white; border-radius: 16px; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; text-align: center; }
+    .dish-card:nth-child(1) .dish-img { border-top: 6px solid #4a90d9; }
+    .dish-card:nth-child(2) .dish-img { border-top: 6px solid #e67e22; }
+    .dish-card:nth-child(3) .dish-img { border-top: 6px solid #27ae60; }
+    .dish-card:nth-child(4) .dish-img { border-top: 6px solid #9b59b6; }
+    .dish-img { width: 100%; height: 500px; object-fit: cover; margin-bottom: 8px; }
+    .dish-name { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; padding: 0 16px; }
+    .dish-area { font-size: 12px; color: #95a5a6; margin-bottom: 12px; }
+    .vote-section { background: #f8f9fa; border-radius: 10px; padding: 10px 16px; margin: 0 12px 16px; }
+    .vote-title { font-weight: 600; font-size: 12px; color: #34495e; margin-bottom: 8px; }
+    .voters { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .voter { display: flex; align-items: center; gap: 4px; background: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+    .voter select { padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; outline: none; }
+    .results { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .results h2 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; }
+    .result-bar-container { margin-bottom: 14px; }
+    .result-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+    .result-bar { height: 12px; background: #ecf0f1; border-radius: 6px; overflow: hidden; }
+    .result-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+    .winner { margin-top: 16px; padding: 16px; background: #d5f5e3; border-radius: 10px; text-align: center; font-weight: 700; color: #27ae60; font-size: 18px; }
+    .recipe-card { margin-top: 20px; padding: 24px; background: #fef9e7; border-radius: 12px; border: 2px solid #f9e79f; }
+    .recipe-card h3 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; }
+    .recipe-card h4 { font-size: 16px; color: #e67e22; margin: 16px 0 8px; }
+    .recipe-card ul, .recipe-card ol { padding-left: 20px; }
+    .recipe-card li { margin-bottom: 6px; line-height: 1.5; color: #34495e; font-size: 14px; }
+    .loading { text-align: center; padding: 40px; color: #7f8c8d; font-size: 18px; }
+    .error { text-align: center; padding: 20px; background: #fadbd8; border-radius: 10px; color: #c0392b; }
     .hidden { display: none; }
   </style>
 </head>
@@ -222,10 +65,10 @@
     <p class="subtitle">Familj på 4 - Johan, Anna, Mileon & Melanie</p>
 
     <div class="input-section">
-      <label>Vilken huvudingrediens har du hemma?</label>
+      <label>Vilken ingrediens har du hemma?</label>
       <div class="input-row">
         <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta, potatis...">
-        <button id="generateBtn">Få idéer</button>
+        <button id="generateBtn">Hitta recept</button>
       </div>
     </div>
 
@@ -236,65 +79,60 @@
   <script>
     const ingredientMap = {
       'kyckling': 'chicken',
-      'chicken': 'chicken',
       'lax': 'salmon',
-      'salmon': 'salmon',
       'kött': 'beef',
       'biff': 'beef',
       'nötkött': 'beef',
-      'beef': 'beef',
       'fläsk': 'pork',
       'fläskkött': 'pork',
-      'pork': 'pork',
       'korv': 'sausage',
-      'sausage': 'sausage',
       'färs': 'minced_beef',
+      'köttfärs': 'minced_beef',
       'nötfärs': 'minced_beef',
-      'minced': 'minced_beef',
       'pasta': 'pasta',
       'spaghetti': 'spaghetti',
       'potatis': 'potatoes',
-      'potatoes': 'potatoes',
       'ris': 'rice',
-      'rice': 'rice',
       'räkor': 'shrimp',
-      'shrimp': 'shrimp',
       'torsk': 'cod',
-      'cod': 'cod',
-      'fisk': 'white_fish',
-      'fish': 'white_fish',
+      'fisk': 'fish',
       'ägg': 'eggs',
-      'egg': 'eggs',
-      'eggs': 'eggs',
       'tofu': 'tofu',
       'lamm': 'lamb',
-      'lamb': 'lamb',
       'kalkon': 'turkey',
-      'turkey': 'turkey',
       'grönsaker': 'vegetables',
-      'vegetables': 'vegetables',
       'svamp': 'mushrooms',
-      'mushrooms': 'mushrooms',
       'ost': 'cheese',
-      'cheese': 'cheese',
       'bönor': 'beans',
-      'beans': 'beans',
       'kassler': 'ham',
       'skinka': 'ham',
-      'ham': 'ham',
       'anka': 'duck',
-      'duck': 'duck',
+    };
+
+    const areaTranslations = {
+      'American': 'Amerikanskt', 'British': 'Brittiskt', 'Canadian': 'Kanadensiskt',
+      'Chinese': 'Kinesiskt', 'French': 'Franskt', 'Greek': 'Grekiskt',
+      'Indian': 'Indiskt', 'Italian': 'Italienskt', 'Japanese': 'Japanskt',
+      'Mexican': 'Mexikanskt', 'Moroccan': 'Marockanskt', 'Spanish': 'Spanskt',
+      'Thai': 'Thailändskt', 'Turkish': 'Turkiskt', 'Vietnamese': 'Vietnamesiskt',
+    };
+
+    const categoryTranslations = {
+      'Beef': 'Nötkött', 'Breakfast': 'Frukost', 'Chicken': 'Kyckling',
+      'Dessert': 'Efterrätt', 'Lamb': 'Lamm', 'Pasta': 'Pasta', 'Pork': 'Fläsk',
+      'Seafood': 'Skaldjur', 'Side': 'Tillbehör', 'Vegan': 'Veganskt',
+      'Vegetarian': 'Vegetariskt',
     };
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
     let currentDishes = [];
 
-    document.getElementById('generateBtn').addEventListener('click', generateDishes);
+    document.getElementById('generateBtn').addEventListener('click', searchRecipes);
     document.getElementById('ingredient').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') generateDishes();
+      if (e.key === 'Enter') searchRecipes();
     });
 
-    async function generateDishes() {
+    async function searchRecipes() {
       const input = document.getElementById('ingredient').value.trim().toLowerCase();
       if (!input) return;
 
@@ -304,7 +142,7 @@
 
       const container = document.getElementById('dishesContainer');
       container.classList.remove('hidden');
-      container.innerHTML = '<div class="loading">Söker recept online...</div>';
+      container.innerHTML = '<div class="loading">Söker recept...</div>';
       document.getElementById('resultsContainer').classList.add('hidden');
 
       const englishIngredient = ingredientMap[input] || input;
@@ -313,21 +151,18 @@
         let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
 
         if (!data.meals || data.meals.length === 0) {
-          const searchData = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
-          if (searchData.meals && searchData.meals.length > 0) {
-            data.meals = searchData.meals;
-          }
+          data = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
         }
 
         if (!data.meals || data.meals.length === 0) {
           container.innerHTML = `<div class="error">Hittade inga recept för "${input}". Försök med en annan ingrediens!</div>`;
           btn.disabled = false;
-          btn.textContent = 'Få idéer';
+          btn.textContent = 'Hitta recept';
           return;
         }
 
         const shuffled = data.meals.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 3);
+        const selected = shuffled.slice(0, 4);
 
         const details = await Promise.all(
           selected.map(meal =>
@@ -341,11 +176,11 @@
         renderDishes();
         renderResults();
       } catch (err) {
-        container.innerHTML = `<div class="error">Något gick fel. Kontrollera din internetanslutning och försök igen.</div>`;
+        container.innerHTML = `<div class="error">Något gick fel. Kontrollera din internetanslutning.</div>`;
       }
 
       btn.disabled = false;
-      btn.textContent = 'Få idéer';
+      btn.textContent = 'Hitta recept';
     }
 
     function renderDishes() {
@@ -354,7 +189,10 @@
         <div class="dish-card">
           <img class="dish-img" src="${dish.strMealThumb}" alt="${dish.strMeal}" loading="lazy">
           <div class="dish-name">Alternativ ${i + 1}: ${dish.strMeal}</div>
-          <div class="dish-area">${dish.strArea ? dish.strArea + 'iskt' : ''} ${dish.strCategory ? '• ' + dish.strCategory : ''}</div>
+          <div class="dish-area">
+            ${areaTranslations[dish.strArea] || dish.strArea || ''}
+            ${dish.strCategory ? ' • ' + (categoryTranslations[dish.strCategory] || dish.strCategory) : ''}
+          </div>
           <div class="vote-section">
             <div class="vote-title">Rösta på denna rätt:</div>
             <div class="voters">
@@ -390,8 +228,7 @@
 
       const maxVotes = Math.max(...votes, 1);
       const totalVotes = votes.reduce((a, b) => a + b, 0);
-
-      const colors = ['#4a90d9', '#e67e22', '#27ae60'];
+      const colors = ['#4a90d9', '#e67e22', '#27ae60', '#9b59b6'];
       const winnerIdx = votes.indexOf(Math.max(...votes));
       const isTie = votes.filter(v => v === votes[winnerIdx]).length > 1 && votes[winnerIdx] > 0;
 
@@ -428,10 +265,7 @@
         }
       }
       const instructions = dish.strInstructions
-        ? dish.strInstructions
-            .split(/\r?\n/)
-            .map(s => s.trim())
-            .filter(s => s.length > 5)
+        ? dish.strInstructions.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 5)
         : [];
 
       return `
