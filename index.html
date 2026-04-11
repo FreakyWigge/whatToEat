@@ -240,6 +240,7 @@
 
       container.querySelectorAll('select').forEach(sel => {
         sel.addEventListener('change', function() {
+          console.log('Select changed:', this.value, this.dataset);
           const voterIdx = parseInt(this.dataset.voter);
           const dishIdx = parseInt(this.dataset.dish);
           const value = parseInt(this.value);
@@ -249,8 +250,10 @@
     }
 
     async function handleVote(voterIdx, dishIdx, value) {
+      console.log('handleVote called:', { voterIdx, dishIdx, value });
       updateSyncInfo('Sparar röst...');
       individualVotes[voterIdx][dishIdx] = parseInt(value);
+      console.log('Updated individualVotes:', individualVotes);
       renderResults();
       renderDishes();
 
