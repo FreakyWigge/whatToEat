@@ -337,8 +337,10 @@
       supabaseClient.channel('sessions')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, (payload) => {
           if (payload.new && payload.new.active && payload.new.id === currentSession?.id) {
-            if (payload.new.recipes) currentDishes = JSON.parse(payload.new.recipes);
-            if (payload.new.votes) individualVotes = JSON.parse(payload.new.votes);
+            try {
+              if (payload.new.recipes) currentDishes = JSON.parse(payload.new.recipes);
+              if (payload.new.votes) individualVotes = JSON.parse(payload.new.votes);
+            } catch(e) { console.error('Parse error:', e); }
             renderDishes();
             renderResults();
             updateSyncInfo('Uppdaterat!');
@@ -346,9 +348,11 @@
         })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sessions' }, (payload) => {
           if (payload.new && payload.new.active) {
-            currentSession = payload.new;
-            if (payload.new.recipes) currentDishes = JSON.parse(payload.new.recipes);
-            if (payload.new.votes) individualVotes = JSON.parse(payload.new.votes);
+            try {
+              currentSession = payload.new;
+              if (payload.new.recipes) currentDishes = JSON.parse(payload.new.recipes);
+              if (payload.new.votes) individualVotes = JSON.parse(payload.new.votes);
+            } catch(e) { console.error('Parse error:', e); }
             startSection.classList.add('hidden');
             renderDishes();
             renderResults();
