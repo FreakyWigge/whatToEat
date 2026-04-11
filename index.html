@@ -111,7 +111,7 @@
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
     let currentDishes = [];
-    let votes = [0, 0, 0, 0];
+    let individualVotes = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]];
     let currentSession = null;
 
     const syncInfo = document.getElementById('syncInfo');
@@ -132,7 +132,7 @@
         if (data && data.length > 0) {
           currentSession = data[0];
           currentDishes = JSON.parse(currentSession.recipes);
-          votes = JSON.parse(currentSession.votes);
+          individualVotes = JSON.parse(currentSession.votes);
           startSection.classList.add('hidden');
           renderDishes();
           renderResults();
@@ -185,13 +185,13 @@
         );
 
         currentDishes = details;
-        votes = [0, 0, 0, 0];
+        individualVotes = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]];
 
         await supabaseClient.from('sessions').update({ active: false }).eq('active', true);
         const { error } = await supabaseClient.from('sessions').insert({
           ingredient: input,
           recipes: JSON.stringify(currentDishes),
-          votes: JSON.stringify(votes),
+          votes: JSON.stringify(individualVotes),
           active: true,
         });
 
@@ -227,9 +227,9 @@
               ${familyMembers.map((member, j) => `
                 <div class="voter">
                   <span>${member}</span>
-                  <select data-voter="${j}" data-dish="${i}">
-                    <option value="0">Nej</option>
-                    <option value="1">Ja!</option>
+                  <select data-voter="${j}" data-dish="${i}" onchange="handleVote(${j}, ${i}, this.value)">
+                    <option value="0" ${individualVotes[j][i] === 0 ? 'selected' : ''}>Nej</option>
+                    <option value="1" ${individualVotes[j][i] === 1 ? 'selected' : ''}>Ja!</option>
                   </select>
                 </div>
               `).join('')}
@@ -237,24 +237,17 @@
           </div>
         </div>
       `).join('');
-
-      container.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', handleVote);
-      });
     }
 
-    async function handleVote(e) {
-      const dishIdx = parseInt(e.target.dataset.dish);
-      const value = parseInt(e.target.value);
+    async function handleVote(voterIdx, dishIdx, value) {
       updateSyncInfo('Sparar röst...');
-
-      votes[dishIdx] = value;
+      individualVotes[voterIdx][dishIdx] = parseInt(value);
       renderResults();
       renderDishes();
 
       const { error } = await supabaseClient
         .from('sessions')
-        .update({ votes: JSON.stringify(votes) })
+        .update({ votes: JSON.stringify(individualVotes) })
         .eq('id', currentSession.id);
 
       if (error) {
@@ -268,6 +261,10 @@
     function renderResults() {
       const container = document.getElementById('resultsContainer');
       container.classList.remove('hidden');
+
+      const votes = currentDishes.map((_, i) => {
+        return individualVotes.reduce((sum, personVotes) => sum + (personVotes[i] || 0), 0);
+      });
 
       const maxVotes = Math.max(...votes, 1);
       const totalVotes = votes.reduce((a, b) => a + b, 0);
@@ -329,7 +326,7 @@
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, (payload) => {
           if (payload.new && payload.new.active && payload.new.id === currentSession?.id) {
             currentDishes = JSON.parse(payload.new.recipes);
-            votes = JSON.parse(payload.new.votes);
+            individualVotes = JSON.parse(payload.new.votes);
             renderDishes();
             renderResults();
             updateSyncInfo('Uppdaterat!');
@@ -339,7 +336,7 @@
           if (payload.new && payload.new.active) {
             currentSession = payload.new;
             currentDishes = JSON.parse(payload.new.recipes);
-            votes = JSON.parse(payload.new.votes);
+            individualVotes = JSON.parse(payload.new.votes);
             startSection.classList.add('hidden');
             renderDishes();
             renderResults();
