@@ -64,7 +64,7 @@
   <div class="container">
     <h1>Vad blir det för mat?</h1>
     <p class="subtitle">Familj på 4 - Johan, Anna, Mileon & Melanie</p>
-    <div class="sync-info" id="syncInfo">⬆️ Laddar...</div>
+    <div class="sync-info" id="syncInfo">Laddar...</div>
 
     <div id="startSection">
       <div class="input-section">
@@ -84,53 +84,29 @@
   <script>
     const SUPABASE_URL = 'https://qnqfqccfkxdfkabuxnas.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFubmZxY2Nma3hkZmthYnV4bmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MTY1MTYsImV4cCI6MjA2NTA5MjUxNn0.sb_publishable_u4TDO0cgUSubJpGOqeXDJg_Zk1mkjpC';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const ingredientMap = {
-      'kyckling': 'chicken',
-      'lax': 'salmon',
-      'kött': 'beef',
-      'biff': 'beef',
-      'nötkött': 'beef',
-      'fläsk': 'pork',
-      'fläskkött': 'pork',
-      'korv': 'sausage',
-      'färs': 'minced_beef',
-      'köttfärs': 'minced_beef',
-      'nötfärs': 'minced_beef',
-      'pasta': 'pasta',
-      'spaghetti': 'spaghetti',
-      'potatis': 'potatoes',
-      'ris': 'rice',
-      'räkor': 'shrimp',
-      'torsk': 'cod',
-      'fisk': 'fish',
-      'ägg': 'eggs',
-      'tofu': 'tofu',
-      'lamm': 'lamb',
-      'kalkon': 'turkey',
-      'grönsaker': 'vegetables',
-      'svamp': 'mushrooms',
-      'ost': 'cheese',
-      'bönor': 'beans',
-      'kassler': 'ham',
-      'skinka': 'ham',
-      'anka': 'duck',
+      'kyckling': 'chicken', 'lax': 'salmon', 'kött': 'beef', 'biff': 'beef',
+      'nötkött': 'beef', 'fläsk': 'pork', 'fläskkött': 'pork', 'korv': 'sausage',
+      'färs': 'minced_beef', 'köttfärs': 'minced_beef', 'nötfärs': 'minced_beef',
+      'pasta': 'pasta', 'spaghetti': 'spaghetti', 'potatis': 'potatoes',
+      'ris': 'rice', 'räkor': 'shrimp', 'torsk': 'cod', 'fisk': 'fish',
+      'ägg': 'eggs', 'tofu': 'tofu', 'lamm': 'lamb', 'kalkon': 'turkey',
+      'grönsaker': 'vegetables', 'svamp': 'mushrooms', 'ost': 'cheese',
+      'bönor': 'beans', 'kassler': 'ham', 'skinka': 'ham', 'anka': 'duck',
     };
 
     const areaTranslations = {
-      'American': 'Amerikanskt', 'British': 'Brittiskt', 'Canadian': 'Kanadensiskt',
-      'Chinese': 'Kinesiskt', 'French': 'Franskt', 'Greek': 'Grekiskt',
-      'Indian': 'Indiskt', 'Italian': 'Italienskt', 'Japanese': 'Japanskt',
-      'Mexican': 'Mexikanskt', 'Moroccan': 'Marockanskt', 'Spanish': 'Spanskt',
-      'Thai': 'Thailändskt', 'Turkish': 'Turkiskt', 'Vietnamese': 'Vietnamesiskt',
+      'American': 'Amerikanskt', 'British': 'Brittiskt', 'Chinese': 'Kinesiskt',
+      'French': 'Franskt', 'Indian': 'Indiskt', 'Italian': 'Italienskt',
+      'Japanese': 'Japanskt', 'Mexican': 'Mexikanskt', 'Spanish': 'Spanskt',
+      'Thai': 'Thailändskt', 'Turkish': 'Turkiskt',
     };
 
     const categoryTranslations = {
-      'Beef': 'Nötkött', 'Breakfast': 'Frukost', 'Chicken': 'Kyckling',
-      'Dessert': 'Efterrätt', 'Lamb': 'Lamm', 'Pasta': 'Pasta', 'Pork': 'Fläsk',
-      'Seafood': 'Skaldjur', 'Side': 'Tillbehör', 'Vegan': 'Veganskt',
-      'Vegetarian': 'Vegetariskt',
+      'Beef': 'Nötkött', 'Chicken': 'Kyckling', 'Lamb': 'Lamm', 'Pasta': 'Pasta',
+      'Pork': 'Fläsk', 'Seafood': 'Skaldjur', 'Vegetarian': 'Vegetariskt',
     };
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
@@ -141,42 +117,34 @@
     const syncInfo = document.getElementById('syncInfo');
     const startSection = document.getElementById('startSection');
 
-    function updateSyncInfo(text) {
-      syncInfo.textContent = text;
-    }
+    function updateSyncInfo(text) { syncInfo.textContent = text; }
 
     async function loadCurrentSession() {
-      updateSyncInfo('⬆️ Laddar från databasen...');
-      
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      updateSyncInfo('Laddar...');
+      try {
+        const { data } = await supabaseClient
+          .from('sessions')
+          .select('*')
+          .eq('active', true)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading session:', error);
-        updateSyncInfo('❌ Kunde inte ladda');
-        return;
-      }
-
-      if (data) {
-        currentSession = data;
-        const recipes = JSON.parse(data.recipes);
-        const savedVotes = JSON.parse(data.votes);
-        
-        currentDishes = recipes;
-        votes = savedVotes;
-        
-        startSection.classList.add('hidden');
-        renderDishes();
-        renderResults();
-        updateSyncInfo('✅ Synkat med alla enheter');
-      } else {
-        updateSyncInfo('🟡 Ingen aktiv omröstning');
+        if (data && data.length > 0) {
+          currentSession = data[0];
+          currentDishes = JSON.parse(currentSession.recipes);
+          votes = JSON.parse(currentSession.votes);
+          startSection.classList.add('hidden');
+          renderDishes();
+          renderResults();
+          updateSyncInfo('Synkat med alla enheter');
+        } else {
+          startSection.classList.remove('hidden');
+          updateSyncInfo('Klart för ny omröstning');
+        }
+      } catch (err) {
+        console.error('Load error:', err);
         startSection.classList.remove('hidden');
+        updateSyncInfo('Kunde inte ladda');
       }
     }
 
@@ -192,19 +160,18 @@
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.textContent = 'Söker...';
-      updateSyncInfo('⬆️ Skapar ny omröstning...');
+      updateSyncInfo('Skapar ny omröstning...');
 
       const englishIngredient = ingredientMap[input] || input;
 
       try {
         let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
-
         if (!data.meals || data.meals.length === 0) {
           data = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
         }
 
         if (!data.meals || data.meals.length === 0) {
-          updateSyncInfo('❌ Inga recept hittades');
+          updateSyncInfo('Inga recept hittades');
           btn.disabled = false;
           btn.textContent = 'Starta omröstning';
           return;
@@ -214,39 +181,29 @@
         const selected = shuffled.slice(0, 4);
 
         const details = await Promise.all(
-          selected.map(meal =>
-            fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`)
-              .then(r => r.json())
-              .then(d => d.meals[0])
-          )
+          selected.map(meal => fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`).then(r => r.json()).then(d => d.meals[0]))
         );
 
         currentDishes = details;
         votes = [0, 0, 0, 0];
 
-        const { error } = await supabase
-          .from('sessions')
-          .update({ active: false })
-          .eq('active', true);
+        await supabaseClient.from('sessions').update({ active: false }).eq('active', true);
+        const { error } = await supabaseClient.from('sessions').insert({
+          ingredient: input,
+          recipes: JSON.stringify(currentDishes),
+          votes: JSON.stringify(votes),
+          active: true,
+        });
 
-        const { error: insertError } = await supabase
-          .from('sessions')
-          .insert({
-            ingredient: input,
-            recipes: JSON.stringify(currentDishes),
-            votes: JSON.stringify(votes),
-            active: true,
-          });
-
-        if (insertError) throw insertError;
+        if (error) throw error;
 
         startSection.classList.add('hidden');
         renderDishes();
         renderResults();
-        updateSyncInfo('✅ Synkat med alla enheter');
+        updateSyncInfo('Synkat med alla enheter');
       } catch (err) {
         console.error('Error:', err);
-        updateSyncInfo('❌ Något gick fel');
+        updateSyncInfo('Något gick fel');
       }
 
       btn.disabled = false;
@@ -270,9 +227,9 @@
               ${familyMembers.map((member, j) => `
                 <div class="voter">
                   <span>${member}</span>
-                  <select data-voter="${j}" data-dish="${i}" ${votes[i] > 0 ? 'disabled' : ''}>
-                    <option value="0" ${votes[i] === 0 ? 'selected' : ''}>Nej</option>
-                    <option value="1" ${votes[i] > 0 ? 'selected' : ''}>Ja!</option>
+                  <select data-voter="${j}" data-dish="${i}">
+                    <option value="0">Nej</option>
+                    <option value="1">Ja!</option>
                   </select>
                 </div>
               `).join('')}
@@ -288,25 +245,23 @@
 
     async function handleVote(e) {
       const dishIdx = parseInt(e.target.dataset.dish);
-      const voterIdx = parseInt(e.target.dataset.voter);
       const value = parseInt(e.target.value);
-
-      updateSyncInfo('⬆️ Sparar röst...');
+      updateSyncInfo('Sparar röst...');
 
       votes[dishIdx] = value;
       renderResults();
       renderDishes();
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('sessions')
         .update({ votes: JSON.stringify(votes) })
         .eq('id', currentSession.id);
 
       if (error) {
-        console.error('Error saving vote:', error);
-        updateSyncInfo('❌ Kunde inte spara röst');
+        console.error('Vote error:', error);
+        updateSyncInfo('Kunde inte spara');
       } else {
-        updateSyncInfo('✅ Synkat med alla enheter');
+        updateSyncInfo('Synkat med alla enheter');
       }
     }
 
@@ -369,10 +324,18 @@
       `;
     }
 
-    async function setupRealtime() {
-      supabase
-        .channel('sessions')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, (payload) => {
+    function setupRealtime() {
+      supabaseClient.channel('sessions')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, (payload) => {
+          if (payload.new && payload.new.active && payload.new.id === currentSession?.id) {
+            currentDishes = JSON.parse(payload.new.recipes);
+            votes = JSON.parse(payload.new.votes);
+            renderDishes();
+            renderResults();
+            updateSyncInfo('Uppdaterat!');
+          }
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sessions' }, (payload) => {
           if (payload.new && payload.new.active) {
             currentSession = payload.new;
             currentDishes = JSON.parse(payload.new.recipes);
@@ -380,7 +343,7 @@
             startSection.classList.add('hidden');
             renderDishes();
             renderResults();
-            updateSyncInfo('🔄 Uppdaterat från en annan enhet');
+            updateSyncInfo('Ny omröstning!');
           }
         })
         .subscribe();
