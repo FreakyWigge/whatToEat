@@ -76,6 +76,12 @@
     <div id="resultsContainer" class="results hidden"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://qnqfqccfkxdfkabuxnas.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFubmZxY2Nma3hkZmthYnV4bmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1MTY1MTYsImV4cCI6MjA2NTA5MjUxNn0.sb_publishable_u4TDO0cgUSubJpGOqeXDJg_Zk1mkjpC';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
   <script>
     const ingredientMap = {
       'kyckling': 'chicken',
@@ -126,6 +132,8 @@
 
     const familyMembers = ['Johan', 'Anna', 'Mileon', 'Melanie'];
     let currentDishes = [];
+    let currentIngredient = '';
+    let lastSavedWinner = null;
 
     document.getElementById('generateBtn').addEventListener('click', searchRecipes);
     document.getElementById('ingredient').addEventListener('keydown', (e) => {
@@ -135,6 +143,9 @@
     async function searchRecipes() {
       const input = document.getElementById('ingredient').value.trim().toLowerCase();
       if (!input) return;
+
+      currentIngredient = input;
+      lastSavedWinner = null;
 
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
@@ -249,7 +260,14 @@
           <div class="winner">
             ${isTie ? 'Oavgjort!' : `Idag blir det: ${currentDishes[winnerIdx].strMeal}`}
           </div>
-          ${!isTie && votes[winnerIdx] > 0 ? renderRecipe(winnerIdx) : ''}
+          ${!isTie && votes[winnerIdx] > 0 ? `
+            <div style="text-align:center;margin-top:12px;">
+              <button id="saveBtn" style="background:#27ae60;${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'background:#95a5a6;' : ''}" ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'disabled' : ''}>
+                ${lastSavedWinner === currentDishes[winnerIdx].idMeal ? 'Sparad!' : 'Spara till historiken'}
+              </button>
+            </div>
+            ${renderRecipe(winnerIdx)}
+          ` : ''}
         ` : ''}
       `;
     }
@@ -280,6 +298,47 @@
         </div>
       `;
     }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id === 'saveBtn') {
+        const votes = currentDishes.map((_, i) => {
+          const selects = document.querySelectorAll(`select[data-dish="${i}"]`);
+          return Array.from(selects).reduce((sum, s) => sum + parseInt(s.value), 0);
+        });
+        const winnerIdx = votes.indexOf(Math.max(...votes));
+        const winner = currentDishes[winnerIdx];
+        const voterNames = [];
+        familyMembers.forEach((member, j) => {
+          const sel = document.querySelector(`select[data-voter="${j}"][data-dish="${winnerIdx}"]`);
+          if (sel && sel.value === '1') voterNames.push(member);
+        });
+
+        const btn = e.target;
+        btn.disabled = true;
+        btn.textContent = 'Sparar...';
+
+        try {
+          const { error } = await supabase.from('winners').insert({
+            dish_name: winner.strMeal,
+            dish_id: winner.idMeal,
+            ingredient: currentIngredient,
+            voters: voterNames.join(', '),
+            vote_count: votes[winnerIdx],
+            image_url: winner.strMealThumb,
+            area: winner.strArea,
+            category: winner.strCategory,
+          });
+
+          if (error) throw error;
+          lastSavedWinner = winner.idMeal;
+          btn.textContent = 'Sparad!';
+        } catch (err) {
+          btn.textContent = 'Fel!';
+          btn.disabled = false;
+          console.error('Save error:', err);
+        }
+      }
+    });
   </script>
 </body>
 </html>
