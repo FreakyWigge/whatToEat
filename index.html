@@ -135,9 +135,11 @@
       'vanilj': 'vanilla', 'kanel': 'cinnamon', 'kardemumma': 'cardamom',
       'nejlikor': 'cloves', 'saffran': 'saffron', 'kummin': 'cumin',
       'spiskummin': 'cumin', 'gurkmeja': 'turmeric', 'curry': 'curry',
-      'paprikapulver': 'paprika', 'wine': 'wine', 'öl': 'beer',
+      'paprikapulver': 'paprika',       'wine': 'wine', 'öl': 'beer',
       'whiskey': 'whiskey', 'rom': 'rum', 'vodka': 'vodka',
       'sherry': 'sherry', 'marsala': 'marsala', 'vermouth': 'vermouth',
+      'vegetariskt': 'Vegetarian', 'vegan': 'Vegan', 'vegansk': 'Vegan',
+      'vegetarisk': 'Vegetarian',
     };
 
     const areaTranslations = {
@@ -206,10 +208,18 @@
       updateSyncInfo('Skapar ny omröstning...');
 
       const englishIngredient = ingredientMap[input] || input;
+      const isCategory = ['Vegetarian', 'Vegan', 'Beef', 'Chicken', 'Lamb', 'Pork', 'Seafood', 'Pasta', 'Dessert', 'Breakfast'].includes(englishIngredient);
 
       try {
-        let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
-        let allMeals = data.meals || [];
+        let allMeals = [];
+        
+        if (isCategory) {
+          const categoryData = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${englishIngredient}`).then(r => r.json());
+          allMeals = categoryData.meals || [];
+        } else {
+          const data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
+          allMeals = data.meals || [];
+        }
         
         if (allMeals.length < 4) {
           const nameData = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
