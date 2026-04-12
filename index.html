@@ -66,18 +66,18 @@
     <p class="subtitle">Familj på 4 - Johan, Anna, Mileon & Melanie</p>
     <div class="sync-info" id="syncInfo">Laddar...</div>
 
-    <div id="startSection">
-      <div class="input-section">
-        <label>Ny omgång - vilken ingrediens?</label>
-        <div class="input-row">
-          <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta...">
-          <button id="generateBtn">Starta omröstning</button>
-        </div>
+    <div class="input-section">
+      <label>Vilken ingrediens?</label>
+      <div class="input-row">
+        <input type="text" id="ingredient" placeholder="t.ex. kyckling, lax, korv, pasta...">
+        <button id="generateBtn">Ny omröstning</button>
       </div>
     </div>
 
     <div id="dishesContainer" class="dishes hidden"></div>
     <div id="resultsContainer" class="results hidden"></div>
+    
+    <div style="text-align:center;padding:20px;font-size:11px;color:#bdc3c7;">v1.07</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -115,7 +115,6 @@
     let currentSession = null;
 
     const syncInfo = document.getElementById('syncInfo');
-    const startSection = document.getElementById('startSection');
 
     function updateSyncInfo(text) { syncInfo.textContent = text; }
 
@@ -133,12 +132,14 @@
           currentSession = data[0];
           if (currentSession.recipes) currentDishes = JSON.parse(currentSession.recipes);
           if (currentSession.votes) individualVotes = JSON.parse(currentSession.votes);
-          startSection.classList.add('hidden');
-          renderDishes();
-          renderResults();
-          updateSyncInfo('Synkat med alla enheter');
+          if (currentDishes.length > 0) {
+            renderDishes();
+            renderResults();
+            updateSyncInfo('Synkat med alla enheter');
+          } else {
+            updateSyncInfo('Klart för ny omröstning');
+          }
         } else {
-          startSection.classList.remove('hidden');
           updateSyncInfo('Klart för ny omröstning');
         }
       } catch (err) {
@@ -197,7 +198,6 @@
 
         if (error) throw error;
 
-        startSection.classList.add('hidden');
         renderDishes();
         renderResults();
         updateSyncInfo('Synkat med alla enheter');
@@ -207,7 +207,7 @@
       }
 
       btn.disabled = false;
-      btn.textContent = 'Starta omröstning';
+      btn.textContent = 'Ny omröstning';
     }
 
     function renderDishes() {
@@ -240,7 +240,6 @@
 
       container.querySelectorAll('select').forEach(sel => {
         sel.addEventListener('change', function() {
-          console.log('Select changed:', this.value, this.dataset);
           const voterIdx = parseInt(this.dataset.voter);
           const dishIdx = parseInt(this.dataset.dish);
           const value = parseInt(this.value);
@@ -250,10 +249,8 @@
     }
 
     async function handleVote(voterIdx, dishIdx, value) {
-      console.log('handleVote called:', { voterIdx, dishIdx, value });
       updateSyncInfo('Sparar röst...');
       individualVotes[voterIdx][dishIdx] = parseInt(value);
-      console.log('Updated individualVotes:', individualVotes);
       renderResults();
       renderDishes();
 
@@ -353,7 +350,6 @@
               if (payload.new.recipes) currentDishes = JSON.parse(payload.new.recipes);
               if (payload.new.votes) individualVotes = JSON.parse(payload.new.votes);
             } catch(e) { console.error('Parse error:', e); }
-            startSection.classList.add('hidden');
             renderDishes();
             renderResults();
             updateSyncInfo('Ny omröstning!');
