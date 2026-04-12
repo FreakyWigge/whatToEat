@@ -39,9 +39,13 @@
     .dish-area { font-size: 12px; color: #95a5a6; margin-bottom: 12px; }
     .vote-section { background: #f8f9fa; border-radius: 10px; padding: 10px 16px; margin: 0 12px 16px; }
     .vote-title { font-weight: 600; font-size: 12px; color: #34495e; margin-bottom: 8px; }
-    .voters { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-    .voter { display: flex; align-items: center; gap: 4px; background: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
-    .voter select { padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; outline: none; }
+    .voters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .voter { display: flex; flex-direction: column; align-items: center; gap: 2px; background: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; min-width: 60px; }
+    .voter.yes { background: #d5f5e3; color: #27ae60; font-weight: 600; }
+    .voter span { font-weight: 500; }
+    .vote-options { display: flex; flex-direction: column; gap: 2px; }
+    .vote-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; }
+    .vote-options input[type="radio"] { cursor: pointer; }
     .results { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
     .results h2 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; }
     .result-bar-container { margin-bottom: 14px; }
@@ -77,7 +81,7 @@
     <div id="dishesContainer" class="dishes hidden"></div>
     <div id="resultsContainer" class="results hidden"></div>
     
-    <div style="text-align:center;padding:20px;font-size:11px;color:#bdc3c7;">v1.07</div>
+    <div style="text-align:center;padding:20px;font-size:11px;color:#bdc3c7;">v1.08</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -128,10 +132,14 @@
           .order('created_at', { ascending: false })
           .limit(1);
 
+        console.log('Data from Supabase:', data);
         if (data && data.length > 0) {
           currentSession = data[0];
+          console.log('Current session:', currentSession);
+          console.log('Recipes raw:', currentSession.recipes);
           if (currentSession.recipes) currentDishes = JSON.parse(currentSession.recipes);
           if (currentSession.votes) individualVotes = JSON.parse(currentSession.votes);
+          console.log('Parsed dishes:', currentDishes);
           if (currentDishes.length > 0) {
             renderDishes();
             renderResults();
@@ -144,7 +152,6 @@
         }
       } catch (err) {
         console.error('Load error:', err);
-        startSection.classList.remove('hidden');
         updateSyncInfo('Kunde inte ladda');
       }
     }
@@ -224,35 +231,27 @@
           <div class="vote-section">
             <div class="vote-title">Rösta:</div>
             <div class="voters">
-              ${familyMembers.map((member, j) => `
-                <div class="voter">
+              ${familyMembers.map((member, j) => {
+                const vote = individualVotes[j] ? individualVotes[j][i] : 0;
+                return `<div class="voter ${vote === 1 ? 'yes' : ''}">
                   <span>${member}</span>
-                  <select data-voter="${j}" data-dish="${i}">
-                    <option value="0" ${individualVotes[j][i] === 0 || !individualVotes[j][i] ? 'selected' : ''}>Nej</option>
-                    <option value="1" ${individualVotes[j][i] === 1 ? 'selected' : ''}>Ja!</option>
-                  </select>
-                </div>
-              `).join('')}
+                  <div class="vote-options">
+                    <label><input type="radio" name="vote-${j}-${i}" value="0" ${vote === 0 ? 'checked' : ''} onchange="handleVote(${j}, ${i}, 0)"> Nej</label>
+                    <label><input type="radio" name="vote-${j}-${i}" value="1" ${vote === 1 ? 'checked' : ''} onchange="handleVote(${j}, ${i}, 1)"> Ja</label>
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
           </div>
         </div>
       `).join('');
-
-      container.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', function() {
-          const voterIdx = parseInt(this.dataset.voter);
-          const dishIdx = parseInt(this.dataset.dish);
-          const value = parseInt(this.value);
-          handleVote(voterIdx, dishIdx, value);
-        });
-      });
     }
 
     async function handleVote(voterIdx, dishIdx, value) {
       updateSyncInfo('Sparar röst...');
       individualVotes[voterIdx][dishIdx] = parseInt(value);
-      renderResults();
       renderDishes();
+      renderResults();
 
       const { error } = await supabaseClient
         .from('sessions')
