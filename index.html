@@ -99,6 +99,45 @@
       'ägg': 'eggs', 'tofu': 'tofu', 'lamm': 'lamb', 'kalkon': 'turkey',
       'grönsaker': 'vegetables', 'svamp': 'mushrooms', 'ost': 'cheese',
       'bönor': 'beans', 'kassler': 'ham', 'skinka': 'ham', 'anka': 'duck',
+      'tomat': 'tomato', 'tomat': 'tomato', 'lök': 'onion', 'vitlök': 'garlic',
+      'morot': 'carrot', 'morötter': 'carrot', 'selleri': 'celery',
+      'gurka': 'cucumber', 'sallad': 'lettuce', 'paprika': 'pepper',
+      'aubergine': 'aubergine', 'aubergine': 'aubergine', 'zucchini': 'courgette',
+      'broccoli': 'broccoli', 'blomkål': 'cauliflower', 'majs': 'corn',
+      'ärtor': 'peas', 'sockerärtor': 'peas', 'spenat': 'spinat',
+      'kål': 'cabbage', 'rödkål': 'red cabbage', 'salladskål': 'cabbage',
+      'tomat': 'tomato', 'champinjoner': 'mushrooms', 'kantareller': 'chanterelle',
+      'mjölk': 'milk', 'grädde': 'cream', 'smör': 'butter', 'yoghurt': 'yogurt',
+      'äpple': 'apple', 'banan': 'banana', 'apelsin': 'orange', 'citron': 'lemon',
+      'lime': 'lime', 'hallon': 'raspberry', 'jordgubbar': 'strawberry',
+      'blåbär': 'blueberry', 'blåbär': 'blueberries', 'smultron': 'strawberries',
+      'havre': 'oats', 'vete': 'wheat', 'mjöl': 'flour', 'rismjöl': 'rice flour',
+      'nötter': 'nuts', 'mandel': 'almond', 'valnöt': 'walnut', 'paranöt': 'brazil nut',
+      'choklad': 'chocolate', 'kaffe': 'coffee', 'te': 'tea', 'honung': 'honey',
+      'sirap': 'syrup', 'socker': 'sugar', 'florsocker': 'sugar',
+      'soja': 'soy', 'sojasås': 'soy sauce', 'ingefära': 'ginger',
+      'chili': 'chili', 'peppar': 'pepper', 'salt': 'salt', 'muskot': 'nutmeg',
+      'oregano': 'oregano', 'basilika': 'basil', 'timjan': 'thyme',
+      'rosmarin': 'rosemary', 'dill': 'dill', 'persilja': 'parsley',
+      'korinter': 'currants', 'russin': 'raisins', 'aprikos': 'apricot',
+      'fikon': 'fig', 'dadlar': 'dates', 'kokos': 'coconut',
+      'sesam': 'sesame', 'linfrö': 'linseed', 'chia': 'chia seeds',
+      'tamarind': 'tamarind', 'bulgur': 'bulgur', 'couscous': 'couscous',
+      'quinoa': 'quinoa', 'bulgur': 'bulgur', 'gnocchi': 'gnocchi',
+      'lasagne': 'lasagne', 'tortellini': 'tortellini', 'focaccia': 'focaccia',
+      'ciabatta': 'ciabatta', 'baguette': 'baguette', 'bröd': 'bread',
+      'bacon': 'bacon', 'kalkon': 'turkey', 'revelj': 'pâté',
+      'sardiner': 'sardines', 'ansjovis': 'anchovies', 'sill': 'herring',
+      'makrill': 'mackerel', 'tonfisk': 'tuna', 'sej': 'pollock',
+      'abborrfilé': 'perch', 'gös': 'pike perch', 'gädda': 'pike',
+      'kräftor': 'crayfish', 'hummer': 'lobster', 'krabba': 'crab',
+      'musslor': 'mussels', 'ostrond': 'oysters', 'bläddra': 'scallops',
+      'vanilj': 'vanilla', 'kanel': 'cinnamon', 'kardemumma': 'cardamom',
+      'nejlikor': 'cloves', 'saffran': 'saffron', 'kummin': 'cumin',
+      'spiskummin': 'cumin', 'gurkmeja': 'turmeric', 'curry': 'curry',
+      'paprikapulver': 'paprika', 'wine': 'wine', 'öl': 'beer',
+      'whiskey': 'whiskey', 'rom': 'rum', 'vodka': 'vodka',
+      'sherry': 'sherry', 'marsala': 'marsala', 'vermouth': 'vermouth',
     };
 
     const areaTranslations = {
@@ -132,14 +171,10 @@
           .order('created_at', { ascending: false })
           .limit(1);
 
-        console.log('Data from Supabase:', data);
         if (data && data.length > 0) {
           currentSession = data[0];
-          console.log('Current session:', currentSession);
-          console.log('Recipes raw:', currentSession.recipes);
           if (currentSession.recipes) currentDishes = JSON.parse(currentSession.recipes);
           if (currentSession.votes) individualVotes = JSON.parse(currentSession.votes);
-          console.log('Parsed dishes:', currentDishes);
           if (currentDishes.length > 0) {
             renderDishes();
             renderResults();
@@ -174,18 +209,34 @@
 
       try {
         let data = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${englishIngredient}`).then(r => r.json());
-        if (!data.meals || data.meals.length === 0) {
-          data = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
+        let allMeals = data.meals || [];
+        
+        if (allMeals.length < 4) {
+          const nameData = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${englishIngredient}`).then(r => r.json());
+          if (nameData.meals) {
+            const existingIds = new Set(allMeals.map(m => m.idMeal));
+            const newMeals = nameData.meals.filter(m => !existingIds.has(m.idMeal));
+            allMeals = [...allMeals, ...newMeals];
+          }
         }
 
-        if (!data.meals || data.meals.length === 0) {
+        if (allMeals.length < 4) {
+          const categoryData = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${englishIngredient}`).then(r => r.json());
+          if (categoryData.meals) {
+            const existingIds = new Set(allMeals.map(m => m.idMeal));
+            const newMeals = categoryData.meals.filter(m => !existingIds.has(m.idMeal));
+            allMeals = [...allMeals, ...newMeals];
+          }
+        }
+
+        if (allMeals.length === 0) {
           updateSyncInfo('Inga recept hittades');
           btn.disabled = false;
           btn.textContent = 'Starta omröstning';
           return;
         }
 
-        const shuffled = data.meals.sort(() => 0.5 - Math.random());
+        const shuffled = allMeals.sort(() => 0.5 - Math.random());
         const selected = shuffled.slice(0, 4);
 
         const details = await Promise.all(
